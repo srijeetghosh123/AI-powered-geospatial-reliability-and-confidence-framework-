@@ -31,9 +31,9 @@ export const IndiaHazardMap: React.FC<IndiaHazardMapProps> = ({
         scrollWheelZoom: false,
       });
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; CARTO &copy; OpenStreetMap',
-        subdomains: 'abcd',
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        subdomains: 'abc',
         maxZoom: 19,
       }).addTo(map);
 
@@ -235,7 +235,7 @@ export const IndiaHazardMap: React.FC<IndiaHazardMapProps> = ({
       </div>
 
       <div className="relative flex-1 w-full overflow-hidden">
-        <div ref={mapContainerRef} className="w-full h-full" />
+        <div ref={mapContainerRef} className="w-full h-full dark-map-tiles" />
       </div>
     </div>
   );
