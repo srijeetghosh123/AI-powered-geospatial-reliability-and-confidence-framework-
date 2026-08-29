@@ -1,4 +1,4 @@
-ï»¿// Streamlined Data Layer for PS07 India Geospatial AI Pattern Recognition & Hazard Intelligence
+// Streamlined Data Layer for PS07 India Geospatial AI Pattern Recognition & Hazard Intelligence
 // v2 - forcing rebuild
 export interface SocialGatheringHotspot {
   id: string;
@@ -37,8 +37,8 @@ export interface HazardZone {
 export function formatCoordinates(coords: [number, number]): string {
   const lat = coords[0];
   const lng = coords[1];
-  const latStr = `${Math.abs(lat).toFixed(4)}Â° ${lat >= 0 ? 'N' : 'S'}`;
-  const lngStr = `${Math.abs(lng).toFixed(4)}Â° ${lng >= 0 ? 'E' : 'W'}`;
+  const latStr = `${Math.abs(lat).toFixed(4)}° ${lat >= 0 ? 'N' : 'S'}`;
+  const lngStr = `${Math.abs(lng).toFixed(4)}° ${lng >= 0 ? 'E' : 'W'}`;
   return `${latStr}, ${lngStr}`;
 }
 
@@ -109,7 +109,7 @@ export const INDIA_HAZARD_ZONES: HazardZone[] = [
     primaryAnomalyDriver: 'InSAR Satellite Terrain Displacement >12mm in 24h',
     satelliteRadarSig: 'Interferometric SAR radar detects high shear slope instability',
     weatherCorrelation: 'Continuous 145mm precipitation over saturated terrain',
-    topographyFactor: 'Steep slope gradient >38Â° in populated transit corridor',
+    topographyFactor: 'Steep slope gradient >38° in populated transit corridor',
     citizenAlertStatus: 'Ready to Dispatch',
     affectedPopulationEstimate: '14,200 Mountain Village Residents',
     xaiReasoning: 'Interferometric synthetic aperture radar (InSAR) confirms active soil movement exceeding critical stability thresholds. Saturated soil weight combined with high slope angle indicates imminent slope failure.',
@@ -149,7 +149,7 @@ export const INDIA_HAZARD_ZONES: HazardZone[] = [
   //   epicenterFocalPoint: 'Mangrove Delta Sea Surge Embankment Breach Point',
   //   historicalPatternMatch: '64.0% match with Cyclone Fani 2019 Outer Rainbands',
   //   primaryAnomalyDriver: 'Sea Surface Temperature anomaly + Barometric Pressure Drop',
-  //   satelliteRadarSig: 'MODIS Ocean Thermal Imaging shows +2.1Â°C SST elevation',
+  //   satelliteRadarSig: 'MODIS Ocean Thermal Imaging shows +2.1°C SST elevation',
   //   weatherCorrelation: 'Wind shear vectors velocity 65 km/h with 4.2m wave swell',
   //   topographyFactor: 'Flat low-lying coastal alluvial plain vulnerable to surge',
   //   citizenAlertStatus: 'Monitoring Only',
@@ -345,7 +345,7 @@ function inferDisasterType(title: string): HazardZone['disasterType'] {
  * the backend with no hotspot data of their own (unlike the hand-authored
  * static demo zones below), so this fills that gap for the locations we
  * currently track. Coordinates are small offsets from each insight's own
- * lat/lon â€” close enough to read as "nearby" on the map.
+ * lat/lon — close enough to read as "nearby" on the map.
  */
 const _GUWAHATI_HOTSPOTS: SocialGatheringHotspot[] = [
   {
@@ -428,10 +428,45 @@ const _LIVE_LOCATION_HOTSPOTS: Record<string, SocialGatheringHotspot[]> = {
   ],
 };
 
+function offsetCoordinates(coords: [number, number], latOffset: number, lngOffset: number): [number, number] {
+  return [coords[0] + latOffset, coords[1] + lngOffset];
+}
+
+function genericHotspotsForInsight(insight: BackendInsight): SocialGatheringHotspot[] {
+  const placeName = (insight.town_village ?? insight.district ?? insight.state ?? 'Local Area').trim();
+  const origin: [number, number] = [insight.latitude ?? 0, insight.longitude ?? 0];
+
+  return [
+    {
+      id: `HOT-GEN-${insight.id}-A`,
+      name: `${placeName} Central Market`,
+      category: 'Bazar / Open Market',
+      distanceKm: 1.1,
+      coordinates: offsetCoordinates(origin, 0.01, 0.01),
+      peakCrowdEstimate: 'Estimate unavailable (no local crowd-density source connected)',
+      riskPriority: 'URGENT EVACUATION WARNING',
+      evacuationDirective: 'Alert local municipal authority to monitor this gathering point and prepare evacuation routes.',
+    },
+    {
+      id: `HOT-GEN-${insight.id}-B`,
+      name: `${placeName} Bus Stand / Transit Point`,
+      category: 'Transit Hub / Railway Station',
+      distanceKm: 1.4,
+      coordinates: offsetCoordinates(origin, -0.01, -0.01),
+      peakCrowdEstimate: 'Estimate unavailable (no local crowd-density source connected)',
+      riskPriority: 'URGENT EVACUATION WARNING',
+      evacuationDirective: 'Alert local transit authority to monitor this gathering point and prepare evacuation routes.',
+    },
+  ];
+}
+
 function hotspotsForLiveInsight(insight: BackendInsight): SocialGatheringHotspot[] {
   const townKey = (insight.town_village ?? '').trim().toLowerCase();
   const districtKey = (insight.district ?? '').trim().toLowerCase();
-  return _LIVE_LOCATION_HOTSPOTS[townKey] ?? _LIVE_LOCATION_HOTSPOTS[districtKey] ?? [];
+  const curated = _LIVE_LOCATION_HOTSPOTS[townKey] ?? _LIVE_LOCATION_HOTSPOTS[districtKey];
+  if (curated) return curated;
+  if (!insight.latitude || !insight.longitude) return [];
+  return genericHotspotsForInsight(insight);
 }
 
 
@@ -475,7 +510,7 @@ export async function fetchLiveHazardZones(): Promise<HazardZone[]> {
   }
 }
 
-/** Raw insights, most recent first â€” used by the live feed timeline, which
+/** Raw insights, most recent first — used by the live feed timeline, which
  *  needs created_at and hasn't been reshaped into a map-pin's HazardZone shape. */
 export async function fetchRawInsights(): Promise<BackendInsight[]> {
   try {
@@ -554,3 +589,4 @@ export async function detectUserLocationAndCheckSurroundingHazards(): Promise<Us
     }
   });
 }
+
